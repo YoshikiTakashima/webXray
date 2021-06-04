@@ -1,0 +1,28 @@
+# docker-compose.yaml
+#
+# Docker-Compose configuration file for simply webxray
+# note: this is not build with security in mind. Use better passwords!
+
+version: '3.1'
+
+services:
+  postgres:
+    image: "postgres:11.12"
+    restart: always
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+    ports:
+      - 5432:5432
+    volumes:
+      - webxray-data:/var/lib/postgresql/data
+
+  webxray:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: bash -c 'while true; do sleep 3; done' # Loop forever to allow debugging
+
+volumes:
+  webxray-data:
+

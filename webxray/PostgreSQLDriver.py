@@ -28,7 +28,7 @@ class PostgreSQLDriver:
 		# modify this per your install
 		self.db_user = 'user'
 		self.db_pass = 'password'
-		self.db_host = 'localhost'
+		self.db_host = 'webxray_postgres_1'
 		self.db_port = '5432'
 
 		# the db_prefix can be overridden if you like

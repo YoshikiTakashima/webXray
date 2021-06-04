@@ -25,7 +25,7 @@ from webxray.ParseURL  import ParseURL
 class ChromeDriver:
 	def __init__(self, config, port_offset=1, chrome_path=None, headless=True):
 		self.debug = False
-		
+
 		# unpack config
 		if self.debug: print(config)
 		self.prewait				= config['client_prewait']
@@ -70,7 +70,7 @@ class ChromeDriver:
 			else:
 				print('Unable to determine Operating System and therefore cannot guess correct Chrome path, see ChromeDriver.py for details.')
 				exit()
-		
+
 		# use port offset to avoid collissions between processes
 		port = 9222+port_offset
 
@@ -82,6 +82,9 @@ class ChromeDriver:
 
 		# not sure this really does anything
 		chrome_cmd += ' --disable-gpu'
+
+                # disable sandbox to worki inside docker
+		chrome_cmd += ' --no-sandbox'
 
 		# set up headless
 		if self.headless: chrome_cmd += ' --headless'
@@ -132,7 +135,7 @@ class ChromeDriver:
 		else:
 			response = response['result']
 		if self.debug: print(f'{response}')
-		
+
 		# done
 		return
 	# __init__
@@ -177,7 +180,7 @@ class ChromeDriver:
 
 	def get_next_ws_response(self):
 		"""
-		Either get the next ws response or send None on 
+		Either get the next ws response or send None on
 			timeout or crash.
 		"""
 		try:
@@ -344,7 +347,7 @@ class ChromeDriver:
 				if self.debug: print(f"fail on {result['result']}")
 				failed_urls.append(url)
 
-		if self.debug: 
+		if self.debug:
 			print('crawled urls:')
 			for res in results:
 				print(res['start_url'],res['final_url'])
@@ -375,7 +378,7 @@ class ChromeDriver:
 			- capture response bodies
 			- capture screen shots
 			- capture page text using readability
-		
+
 		Note that if get_text_only is true we only do basic tasks
 			such as getting the policy, and we return far less content which is useful
 			for doing text capture.
@@ -401,7 +404,7 @@ class ChromeDriver:
 		websocket_events 		= []
 		event_source_msgs 		= []
 		load_finish_events 		= []
-		
+
 		# Response bodies are keyed to the request_id when they are
 		#	returned to calling function, and we get the response bodies
 		#	by issuing websocket commands so we we first keep track
@@ -414,11 +417,11 @@ class ChromeDriver:
 		response_bodies = {}
 
 		# We keep dom_storage here, the dict key is a tuple of the securityOrigin
-		# 	isLocalStorage, and the domstorage key. This way we can keep only final 
+		# 	isLocalStorage, and the domstorage key. This way we can keep only final
 		#	values in cases they are overwritten.  Note this data is
 		#	for internal processes and not returned
 		dom_storage_holder 	= {}
-		
+
 		# Before we return the result we store the unique domstorage items to a
 		#	list of dicts
 		dom_storage = []
@@ -433,7 +436,7 @@ class ChromeDriver:
 			'Network.webSocketClosed'
 		]
 
-		# The timestamps provided by Chrome DevTools are "Monotonically increasing time 
+		# The timestamps provided by Chrome DevTools are "Monotonically increasing time
 		#	in seconds since an arbitrary point in the past."  What this means is they are
 		#	essentially offsets (deltas) and not real timestamps.  However, the Network.requestWillBeSent
 		#	also has a "wallTime" which is a UNIX timestamp.  So what we do below is set the
@@ -442,7 +445,7 @@ class ChromeDriver:
 		origin_walltime  = None
 		first_timestamp	 = None
 
-		# keeps track of what ws_id belongs to which type of command, we 
+		# keeps track of what ws_id belongs to which type of command, we
 		#	remove entries when we get a response
 		pending_ws_id_to_cmd = {}
 
@@ -481,7 +484,7 @@ class ChromeDriver:
 				})
 			else:
 				response = response['result']
-			if self.debug: print(f'ws response: {response}')	
+			if self.debug: print(f'ws response: {response}')
 
 		# enable network and domstorage when doing a network_log
 		if not get_text_only:
@@ -564,7 +567,7 @@ class ChromeDriver:
 			# 	changes (eg 1.99 -> 2.10 = 1 -> 2)
 			last_second = 0
 
-			# We keep collecting devtools_responses in this loop until either we haven't seen 
+			# We keep collecting devtools_responses in this loop until either we haven't seen
 			#	network activity for the no_event_wait value or we exceed the max_wait
 			#	time.
 			while True:
@@ -749,13 +752,13 @@ class ChromeDriver:
 			for i in range(0,self.prewait):
 				self.do_scroll
 				time.sleep(1)
-		
+
 		#####################
 		# DEVTOOLS COMMANDS #
 		#####################
 
 		# only issue body commands for network_log
-		if not get_text_only:	
+		if not get_text_only:
 			if self.return_bodies:
 				if self.debug: print('######################################')
 				if self.debug: print(' Going to send response body commands ')
@@ -768,7 +771,7 @@ class ChromeDriver:
 					if response['success'] == False:
 						self.exit()
 						return response
-					else: 
+					else:
 						ws_id = response['result']
 					ws_id_to_req_id[ws_id] = request_id
 					pending_ws_id_to_cmd[ws_id] = 'response_body'
@@ -790,7 +793,7 @@ class ChromeDriver:
 		if response['success'] == False:
 			self.exit()
 			return response
-		else: 
+		else:
 			ws_id = response['result']
 
 		pending_ws_id_to_cmd[ws_id] = 'page_nav'
@@ -799,7 +802,7 @@ class ChromeDriver:
 		if response['success'] == False:
 			self.exit()
 			return response
-		else: 
+		else:
 			ws_id = response['result']
 		pending_ws_id_to_cmd[ws_id] = 'page_src'
 
@@ -807,7 +810,7 @@ class ChromeDriver:
 		if response['success'] == False:
 			self.exit()
 			return response
-		else: 
+		else:
 			ws_id = response['result']
 		pending_ws_id_to_cmd[ws_id] = 'html_lang'
 
@@ -831,7 +834,7 @@ class ChromeDriver:
 		if response['success'] == False:
 			self.exit()
 			return response
-		else: 
+		else:
 			ws_id = response['result']
 		pending_ws_id_to_cmd[ws_id] = 'links'
 
@@ -844,14 +847,14 @@ class ChromeDriver:
 		if response['success'] == False:
 			self.exit()
 			return response
-		else: 
+		else:
 			ws_id = response['result']
 		pending_ws_id_to_cmd[ws_id] = 'meta_desc'
 
 		# PAGE_TEXT / READABILITY_HTML
 		#
 		# Inject the locally downloaded copy of readability into the page
-		#	and extract the content. Note you must download readability on 
+		#	and extract the content. Note you must download readability on
 		#	your own and place in the appropriate directory
 		if self.return_page_text or get_text_only:
 			# if we can't load readability it likely isn't installed, raise error
@@ -860,7 +863,7 @@ class ChromeDriver:
 				js = json.dumps(f"""
 					var wbxr_readability = (function() {{
 						{readability_js}
-						var documentClone = document.cloneNode(true); 
+						var documentClone = document.cloneNode(true);
 						var article = new Readability(documentClone).parse();
 						return (article);
 					}}());
@@ -870,7 +873,7 @@ class ChromeDriver:
 				if response['success'] == False:
 					self.exit()
 					return response
-				else: 
+				else:
 					ws_id = response['result']
 				pending_ws_id_to_cmd[ws_id] = 'page_text'
 			except:
@@ -901,7 +904,7 @@ class ChromeDriver:
 			if response['success'] == False:
 				self.exit()
 				return response
-			else: 
+			else:
 				ws_id = response['result']
 			pending_ws_id_to_cmd[ws_id] = 'screen_shot'
 		else:
@@ -912,7 +915,7 @@ class ChromeDriver:
 		if response['success'] == False:
 			self.exit()
 			return response
-		else: 
+		else:
 			ws_id = response['result']
 		pending_ws_id_to_cmd[ws_id] = 'cookies'
 
@@ -945,7 +948,7 @@ class ChromeDriver:
 					'success': False,
 					'result': 'Timeout when processing devtools responses.'
 				})
-			
+
 			if self.debug: print(loop_elapsed,json.dumps(devtools_response)[:100])
 
 			# if response has an 'id' see which of our commands it goes to
@@ -1006,12 +1009,12 @@ class ChromeDriver:
 
 				# RESPONSE BODIES
 				elif cmd == 'response_body':
-					if 'result' not in devtools_response: 
+					if 'result' not in devtools_response:
 						if self.debug: print('response body error: %s' % devtools_response)
 						continue
 
 					# if we are here we already know return_bodies is true so we
-					#	just have to check the reponse is either not base64 or we 
+					#	just have to check the reponse is either not base64 or we
 					#	do want to return base64
 					if devtools_response['result']['base64Encoded'] == False or self.return_bodies_base64:
 						response_bodies[ws_id_to_req_id[ws_id]] = {
@@ -1060,7 +1063,7 @@ class ChromeDriver:
 						readability_html 	= None
 
 			# we've gotten all the reponses we need, break
-			if len(pending_ws_id_to_cmd) == 0: 
+			if len(pending_ws_id_to_cmd) == 0:
 				if self.debug: print('Got all ws responses!')
 				break
 		# end ws loop
@@ -1104,7 +1107,7 @@ class ChromeDriver:
 					'href'		: link['href'].strip(),
 					'internal'	: False
 				}
-			
+
 			# only add unique links
 			if link not in all_links:
 				all_links.append(link)
@@ -1165,10 +1168,10 @@ class ChromeDriver:
 				response['timestamp'] = self.fixed_timestamp(origin_walltime, first_timestamp, response['timestamp'])
 
 			for websocket_event in websocket_events:
-				websocket_event['timestamp'] = self.fixed_timestamp(origin_walltime, first_timestamp, websocket_event['timestamp'])			
+				websocket_event['timestamp'] = self.fixed_timestamp(origin_walltime, first_timestamp, websocket_event['timestamp'])
 
 			for event_source_msg in event_source_msgs:
-				event_source_msg['timestamp'] = self.fixed_timestamp(origin_walltime, first_timestamp, event_source_msg['timestamp'])	
+				event_source_msg['timestamp'] = self.fixed_timestamp(origin_walltime, first_timestamp, event_source_msg['timestamp'])
 
 			# Session cookies have expires of -1 so we sent to None
 			for cookie in cookies:
@@ -1179,7 +1182,7 @@ class ChromeDriver:
 						cookie['expires'] = None
 
 			# If origin_walltime or final_walltime are None that means
-			#	we didn't record any Network.requestWillBeSent or 
+			#	we didn't record any Network.requestWillBeSent or
 			#	Network.loadingFinished events, and this was not a successful
 			#	page load
 			if origin_walltime == None or final_walltime == None:
@@ -1208,7 +1211,7 @@ class ChromeDriver:
 			'prewait'				: self.prewait,
 			'no_event_wait' 		: self.no_event_wait,
 			'max_wait' 				: self.max_wait,
-			'start_url'				: url, 
+			'start_url'				: url,
 			'final_url'				: final_url,
 			'title'					: title,
 			'meta_desc'				: meta_desc,
@@ -1231,7 +1234,7 @@ class ChromeDriver:
 			'screen_shot'			: screen_shot,
 			'page_load_strategy'	: self.page_load_strategy
 		}
-		
+
 		# Close browser and websocket connection, if doing a crawl
 		#	this happens in get_crawl_traffic
 		if self.is_crawl == False: self.exit()
@@ -1249,7 +1252,7 @@ class ChromeDriver:
 			we make them None if not present and also normalize
 			the naming convention.  Returns a dict.
 		"""
-		
+
 		cleaned_request = {}
 
 		# get non-optional values first
@@ -1425,7 +1428,7 @@ class ChromeDriver:
 			url_path = urlsplit(url.strip().lower()).path
 		except:
 			return False
-		
+
 		# these are common file types we want to avoid
 		illegal_extensions = [
 			'apk',
@@ -1451,15 +1454,15 @@ class ChromeDriver:
 			if url_extension in illegal_extensions: return False
 		except:
 			return True
-		
+
 		# it's good
 		return True
 	# is_url_valid
 
 	def idna_encode_url(self, url, no_fragment=False):
 		"""
-		Non-ascii domains will crash some browsers, so we need to convert them to 
-			idna/ascii/utf-8. This requires splitting apart the url, converting the 
+		Non-ascii domains will crash some browsers, so we need to convert them to
+			idna/ascii/utf-8. This requires splitting apart the url, converting the
 			domain to idna, and pasting it all back together.  Note that this can fail,
 			particularly in regards to idna encoding of invalid addresses (eg http://.example.com)
 			so we return None in fail event.
@@ -1477,7 +1480,7 @@ class ChromeDriver:
 
 	def is_url_internal(self,origin_url,target_url):
 		"""
-		Given two urls (origin, target) determines if 
+		Given two urls (origin, target) determines if
 			the target is internal to the origin based on
 			subsuffix+1 domain.
 		"""
